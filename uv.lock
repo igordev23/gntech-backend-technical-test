@@ -94,7 +94,7 @@ wheels = [
 
 [[package]]
 name = "gntech-weather-api"
-version = "0.1.0"
+version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
