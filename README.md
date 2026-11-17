@@ -6,7 +6,7 @@ O objetivo é demonstrar extração de dados de uma API pública, persistência 
 
 ## Status
 
-**Plano 002 implementado na branch `feat/weather-api`.** A API de clima, os adaptadores OpenWeather/PostgreSQL, as migrations, os testes e a execução local via Docker Compose estão disponíveis conforme `plans/002-weather-api.md`.
+**Plano 002 implementado e integrado em `develop` pelo PR #3.** A API de clima, os adaptadores OpenWeather/PostgreSQL, as migrations, os testes e a execução local via Docker Compose estão disponíveis conforme `plans/002-weather-api.md`.
 
 ## Decisões fechadas
 
