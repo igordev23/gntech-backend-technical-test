@@ -19,6 +19,7 @@
 - Especificação autoritativa do produto: `docs/PROJECT.md`. Em conflito entre este arquivo, os docs e o `PROJECT.md`, o `PROJECT.md` vence.
 - `README.md` é a visão geral para desenvolvedores; `docs/` guarda os detalhes. Este arquivo é o guia operacional curto.
 - Toda feature chega com um plano próprio em `plans/`.
+- Todo plano novo deve cumprir o padrão obrigatório de completude em `docs/sdd.md`; não iniciar implementação com escopo, contrato, arquivos ou validação ambíguos.
 - Decisões de arquitetura, contrato, dados e dependências ficam em `docs/decisions.md`, com o motivo e as alternativas rejeitadas. Antes de propor mudança, leia o registro.
 - Este é um teste técnico, não um produto em produção.
 
@@ -103,6 +104,17 @@ app/
 3. **Merge do plano em `develop`.** Aprovado e mergeado, a implementação pode começar.
 4. **PR de implementação.** Em PR separado (`feat/...` ou `fix/...`), referenciando o plano e o ID de decisão aplicável.
 5. **Fix também é PR.** Correção nunca vai direto para `develop` nem para `main`; sempre branch + PR.
+
+### Padrão obrigatório de qualidade do plano
+
+- Listar os documentos de referência pelos caminhos exatos, sua autoridade e qual prevalece em caso de conflito.
+- Definir o contrato observável: entradas, saídas, validações, defaults, erros/status e compatibilidade preservada.
+- Enumerar cada caminho de arquivo permitido e sua responsabilidade. Não usar curingas, “arquivos relacionados”, “se necessário” ou “etc.” para deixar escopo implícito.
+- Em integrações externas, citar a documentação oficial consultada e fixar produto/versão, método, rota, parâmetros, autenticação, formato de resposta/mapeamento, timeout, retry e tradução de erros.
+- Fechar decisões que afetem contrato, arquitetura, dados, dependências ou comportamento antes do merge; registrar em `docs/decisions.md`. Questões ainda abertas devem ser marcadas como bloqueios e esclarecidas antes da aprovação.
+- Para cada comportamento, informar spec, cenário, falha RED esperada, arquivos GREEN e comandos exatos. A falha RED não pode ser causada por ambiente ou erro de importação.
+- Cobrir configuração, migração/downgrade, documentação, integração/CI, riscos com mitigação e critérios de aceite verificáveis.
+- Não acrescentar à implementação qualquer comportamento, arquivo, dependência ou decisão que não esteja listado no plano aprovado. Se faltar algo, parar e solicitar esclarecimento ou aprovar emenda/plano novo antes de continuar.
 
 Exceção: ajuste no próprio plano ainda em revisão pode entrar no mesmo PR do plano, porque nada foi mergeado. Depois do merge, qualquer ajuste é PR novo.
 

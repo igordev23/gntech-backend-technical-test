@@ -10,6 +10,22 @@ Use este fluxo para features, correções de comportamento, integrações e alte
 
 Nada fora do plano aprovado em `plans/` é implementado. Uma necessidade nova vira um novo plano, aprovado antes da execução. Ver `AGENTS.md`.
 
+## Padrão obrigatório de completude do plano
+
+Todo plano novo deve ser escrito para que outro implementador consiga executar o escopo sem escolher contratos ou inventar requisitos. Antes de abrir o PR do plano, confirme:
+
+- **Fontes e autoridade:** caminhos exatos dos documentos consultados; indique a fonte autoritativa e como resolver conflitos. Leia `AGENTS.md`, `docs/PROJECT.md`, `docs/architecture.md`, `docs/decisions.md`, `docs/testing.md` e `docs/sdd.md` quando forem relevantes.
+- **Contrato verificável:** entradas, saídas, tipos/campos, limites, defaults, normalização, erros e status HTTP. Defina também comportamento legado/compatibilidade.
+- **Integrações externas:** fonte oficial e versão do produto; método e rota exatos; parâmetros e autenticação; estrutura de resposta e mapeamento campo-a-campo; timeouts, retries, status de retry e erros. Não deduzir rotas por nome de produto nem copiar formato de outra versão.
+- **Arquivos fechados:** uma lista de caminhos exatos para criar/alterar, com ação e responsabilidade de cada arquivo. Não usar `src/*`, `app/`, “arquivos relacionados”, “se necessário” ou `etc.` como permissão aberta.
+- **Decisões:** decisões relevantes já aceitas devem apontar para IDs em `docs/decisions.md`. Decisões novas devem ser registradas com contexto, escolha, motivo, alternativas rejeitadas e consequências. Não deixar contrato, arquitetura, dados ou dependências em aberto no plano aprovado.
+- **RED → GREEN:** para cada comportamento, declarar arquivo(s) da spec, cenário, resultado observável, motivo exato da falha RED, comando focado e caminhos GREEN. Garantir que o RED não falha por setup, conexão, pacote ausente ou importação. Se necessário, planejar stubs importáveis sem comportamento antes de executar a spec.
+- **Dados e operação:** schema/migration, constraints, estratégia de downgrade, configuração, segredos, execução local, CI e atualização documental correspondentes ao escopo.
+- **Limites:** listar explicitamente o que fica fora. Se durante a implementação faltar um arquivo, decisão, dependência ou comportamento, parar; não ampliar o plano por inferência.
+- **Aceite:** critérios objetivos que possam ser verificados por testes ou comandos, ligados aos comportamentos definidos.
+
+Se uma fonte oficial não responder a uma questão necessária ou houver duas interpretações plausíveis, registrar a questão como bloqueio e obter decisão do responsável antes de aprovar/implementar. Não preencher lacunas com suposições silenciosas.
+
 ## Sequência obrigatória
 
 1. Crie ou atualize `plans/NNN-short-name.md` a partir do modelo abaixo.
@@ -44,34 +60,63 @@ Troque `feat/` por `fix/`, `docs/` ou `chore/` quando apropriado. Não remova um
 # NNN — Nome curto
 
 ## Origem
-Issue, pedido ou plano que motivou a mudança.
+Pedido/issue e problema observável que motivam a mudança.
+
+## Documentos de referência
+- `AGENTS.md` — regras aplicáveis.
+- `docs/PROJECT.md` — contrato de produto e precedência.
+- `docs/architecture.md` — módulos, dependências e dados.
+- `docs/decisions.md` — decisões existentes e IDs aplicáveis.
+- `docs/testing.md` e `docs/sdd.md` — método de validação.
+- Outros caminhos relevantes, com a informação usada de cada um.
+- Fontes oficiais externas, quando houver integração, com produto/versão.
 
 ## Contrato alvo
-Entrada, saída, regras e comportamento legado preservado.
+- Entradas, tipos, obrigatoriedade, normalização, limites e defaults.
+- Saídas com campos/tipos/formato e status HTTP.
+- Erros: código estável, status e estrutura de `details`.
+- Regras de negócio, compatibilidade e comportamento legado.
+- Integrações: método/rota/params/auth, mapeamento de resposta, timeout/retry e erros.
 
 ## Decisões
-Escolhas fechadas e alternativas rejeitadas.
+- IDs aceitos em `docs/decisions.md`.
+- Decisões novas com justificativa e alternativas.
+- Questões em aberto: declarar bloqueio e responsável pela decisão; nenhum bloqueio de contrato pode seguir para aprovação.
+
+## Escopo de arquivos
+| Caminho exato | Ação (criar/alterar) | Responsabilidade e limite |
+|---|---|---|
+| `path/to/file` | criar | Comportamento permitido e exclusões relevantes |
+
+## Fora de escopo
+- Comportamentos, arquivos, dependências e refactors que não serão feitos.
 
 ## RED → GREEN → REFACTOR
 ### RED 1 — comportamento
-- Arquivo da spec:
-- Cenário:
-- Falha esperada:
-- Comando:
+- Arquivo(s) exato(s) da spec:
+- Cenário/entrada:
+- Resultado esperado:
+- Falha RED esperada (sem falha de setup/importação):
+- Comando exato:
 
 ### GREEN 1
-Implementação mínima.
+Arquivos exatos e menor mudança que satisfaz a spec.
 
 ### REFACTOR 1
-Limpeza segura após a spec passar.
+Limpeza segura após a spec passar; sem alterar contrato ou escopo.
 
-## Riscos
+## Dados, configuração e operação
+- Migration/downgrade, variáveis, segredos, execução local e CI quando aplicável.
+
+## Riscos e mitigação
+- Risco observável → mitigação dentro do escopo.
 
 ## Critério de pronto
-- [ ] RED executado e falhou pelo motivo esperado
-- [ ] GREEN validado pela spec focada
-- [ ] Suite ampla executada
-- [ ] Documentação e integração atualizadas
+- [ ] Cada item de contrato possui teste/validação correspondente.
+- [ ] Apenas os caminhos autorizados foram criados/alterados.
+- [ ] Documentação e decisões refletem a implementação.
+- [ ] RED, GREEN e comandos de validação ampla registrados com resultado.
+
 ```
 
 ## Idioma

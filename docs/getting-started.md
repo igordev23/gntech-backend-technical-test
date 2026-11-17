@@ -39,9 +39,10 @@ O `docker compose` aplica as migrations automaticamente antes de subir a API.
 | `DATABASE_URL` | não | `postgresql+psycopg://weather:weather@localhost:5432/weather` | conexão fora do Docker; o compose sobrescreve com host `db` |
 | `TEST_DATABASE_URL` | não | `postgresql+psycopg://weather:weather@localhost:5432/weather_test` | banco usado pelos testes de integração |
 | `OPENWEATHER_API_KEY` | sim, para sync | — | chave da OpenWeather; nunca commitar |
+| `OPENWEATHER_GEOCODING_BASE_URL` | não | `https://api.openweathermap.org/geo/1.0` | base do Geocoding API usado antes da consulta |
 | `OPENWEATHER_BASE_URL` | não | `https://api.openweathermap.org/data/2.5` | base da API externa |
 | `OPENWEATHER_TIMEOUT_SECONDS` | não | `5` | timeout por requisição |
-| `OPENWEATHER_MAX_RETRIES` | não | `2` | tentativas extras em timeout/5xx |
+| `OPENWEATHER_MAX_RETRIES` | não | `2` | tentativas extras por chamada HTTP em timeout/429/5xx |
 | `API_PORT` | não | `8000` | porta da API no host |
 | `APP_ENV` | não | `development` | ambiente lógico (`development`, `test`, `production`) |
 | `LOG_LEVEL` | não | `INFO` | nível de log |
