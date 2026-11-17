@@ -29,6 +29,11 @@ Este arquivo registra as decisões relevantes do projeto e, principalmente, **po
 | D-013 | SDD, escopo travado e git flow | aceita |
 | D-014 | Conteúdo em português, estrutura e código em inglês | aceita |
 | D-015 | Repositório público `gntech-backend-technical-test` | aceita |
+| D-016 | Estrutura do seed com upsert em `source="openweather"` | aceita |
+| D-017 | Catálogo inicial de códigos de erro e status HTTP | aceita |
+| D-018 | Paginação por `page` e `page_size`, com limite de 100 | aceita |
+| D-019 | Timeout e retry limitados do client OpenWeather | aceita |
+| D-020 | Gravação de `raw_payload` em JSONB | aceita |
 
 ---
 
@@ -496,15 +501,154 @@ Este arquivo registra as decisões relevantes do projeto e, principalmente, **po
 
 ---
 
+## D-016 — Estratégia do seed
+
+**Detalhes:** `plans/002-weather-api.md`, `scripts/seed.py` · **Status:** aceita
+
+**Contexto.** O seed precisa fornecer dados aos GETs sem chamar a OpenWeather e não pode duplicar uma cidade já persistida pelo sync.
+
+**Decisão.** O seed usa `source="openweather"` e grava com o mesmo upsert do sync, pela chave `(city_name, country_code, source)`.
+
+**Por quê.**
+
+- Reaproveita a chave única já definida em D-004.
+- Permite repetir o seed sem duplicar cidades.
+- Mantém dados de demonstração indistinguíveis pela origem, mas identificáveis pelo conteúdo quando necessário.
+
+**Alternativas rejeitadas.**
+
+| Alternativa | Por que não |
+|---|---|
+| Source próprio para o seed | Criaria uma segunda leitura concorrente na listagem. |
+| Insert simples sem upsert | Falharia na segunda execução por violação da chave única. |
+| Seed automático no entrypoint | Produz efeito colateral escondido toda vez que a API sobe. |
+
+**Consequências.**
+
+- O seed pode sobrescrever uma leitura sincronizada da mesma cidade no banco local.
+- O comando deve ser executado explicitamente pelo desenvolvedor.
+
+---
+
+## D-017 — Catálogo inicial de erros
+
+**Detalhes:** `plans/002-weather-api.md` · **Status:** aceita
+
+**Contexto.** Validação, provedor, banco e recurso inexistente precisam de códigos estáveis sobre D-009.
+
+**Decisão.** Usar os códigos e status definidos no plano 002, com envelope `{ "error": "codigo_snake", "details": { ... } }`.
+
+**Por quê.**
+
+- A forma fica previsível para Swagger, `curl` e testes.
+- Cada situação tem um código estável separado da mensagem humana.
+- Segredos e URLs internas não precisam aparecer no envelope.
+
+**Alternativas rejeitadas.**
+
+| Alternativa | Por que não |
+|---|---|
+| Repassar o formato do FastAPI | Mistura erros de framework e domínio. |
+| Um único código `upstream_error` | Perde a semântica útil de 404, 401, 429 e timeout. |
+| Expor o response bruto do provedor | Vazaria detalhes e acoplaria o cliente externo ao contrato público. |
+
+**Consequências.**
+
+- Novos códigos exigem teste e atualização do plano/registro.
+- Erros Pydantic também são normalizados para o mesmo envelope.
+
+---
+
+## D-018 — Paginação e ordenação
+
+**Detalhes:** `plans/002-weather-api.md`, `docs/PROJECT.md` · **Status:** aceita
+
+**Contexto.** A listagem precisa ter limites previsíveis e uma ordem determinística.
+
+**Decisão.** `page` começa em 1, `page_size` começa em 20 e é limitado a 100; a consulta usa `observed_at DESC`.
+
+**Por quê.**
+
+- Evita carregar conjuntos ilimitados.
+- Remove ambiguidade sobre a leitura mais recente.
+- O índice em `observed_at DESC` sustenta a ordenação.
+
+**Alternativas rejeitadas.**
+
+| Alternativa | Por que não |
+|---|---|
+| Cursor pagination | Acrescenta complexidade sem requisito de grande volume nesta entrega. |
+| Offset sem limite máximo | Permite respostas arbitrariamente grandes. |
+| Ordenação por `fetched_at` | O contrato de consulta deve refletir a observação do clima, não a hora da coleta. |
+
+**Consequências.**
+
+- Paginação usa `count + select` no repository.
+- Filtros continuam opcionais e não mudam a ordenação.
+
+---
+
+## D-019 — Timeout e retry do client
+
+**Detalhes:** `plans/002-weather-api.md`, `.env.example` · **Status:** aceita
+
+**Contexto.** O client precisa limitar latência e tolerar falhas transitórias sem insistir em erros definitivos.
+
+**Decisão.** Timeout de 5 segundos, até 2 tentativas adicionais e backoff limitado. Retentar 429 e 5xx; não retentar 401 ou 404.
+
+**Por quê.**
+
+- Limita o tempo de espera da API.
+- Recupera respostas transitórias sem mascarar configuração ou cidade inválida.
+- Mantém a política configurável pelos mesmos nomes já documentados no `.env.example`.
+
+**Alternativas rejeitadas.**
+
+| Alternativa | Por que não |
+|---|---|
+| Retry em todo erro HTTP | Amplia latência em 401, 404 e payload inválido sem chance de recuperação. |
+| Retry indefinido | Pode prender requests e consumir quota. |
+| Sem retry | Deixa o serviço mais sensível a falhas transitórias simples. |
+
+**Consequências.**
+
+- 429 pode ser devolvido ao chamador como `provider_rate_limited`.
+- Timeout, 5xx e payload inválido têm erros de domínio distintos.
+
+---
+
+## D-020 — Gravação de `raw_payload`
+
+**Detalhes:** `plans/002-weather-api.md`, `docs/architecture.md` · **Status:** aceita
+
+**Contexto.** É útil preservar a resposta original para auditoria, mas ela não pode substituir o modelo tipado.
+
+**Decisão.** O adaptador grava a resposta válida da OpenWeather em `raw_payload` JSONB por padrão.
+
+**Por quê.**
+
+- Facilita auditoria e diagnóstico local.
+- Não altera as consultas tipadas usadas pelo sistema.
+- Permite evoluir o mapeamento sem perder o payload recebido.
+
+**Alternativas rejeitadas.**
+
+| Alternativa | Por que não |
+|---|---|
+| Não persistir payload | Reduz rastreabilidade sem ganho neste volume. |
+| Usar JSONB como fonte de verdade | Perde colunas tipadas, índices e constraints. |
+| Persistir apenas campos selecionados | Já é o que acontece nas colunas tipadas; não adicionaria auditoria. |
+
+**Consequências.**
+
+- Logs não devem imprimir o payload completo.
+- O domínio continua independentemente do formato bruto.
+
+---
+
 ## Decisões em aberto
 
-Fechadas no plano 002, antes de qualquer código:
-
-- Estratégia do seed em relação a `source` (D-011) para não duplicar cidade na listagem.
-- Catálogo inicial de códigos de erro (D-009) e status HTTP correspondentes.
-- Limites de paginação (`page`, `page_size`) e ordenação padrão.
-- Política de retry/timeout do client (quantas tentativas, quais status, backoff).
-- Formato do `raw_payload` e se ele é gravado por padrão.
+Nenhuma decisão do plano 002 permanece aberta nesta etapa.
 
 ## Como registrar uma decisão nova
 
