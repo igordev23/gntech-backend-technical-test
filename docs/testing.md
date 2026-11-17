@@ -21,8 +21,8 @@ O objetivo é confiança para entregar, não número de cobertura.
 - Unitários: `tests/unit/` — client e service, com `respx` e fakes.
 - Integração: `tests/integration/` — API com PostgreSQL de teste e client mockado.
 - Banco de teste: `TEST_DATABASE_URL`; migrations aplicadas antes da suite.
-- CI: `.github/workflows/ci.yml` sobe PostgreSQL como service e roda o `validation_command` de `.repo-model.json`.
-- Comando local: `docker compose run --rm api pytest` ou `uv run pytest`.
+- CI: `.github/workflows/ci.yml` sobe PostgreSQL 16 como service e roda o `validation_command` de `.repo-model.json`.
+- Comando local: inicie `db` com Docker Compose, crie `weather_test` e execute `TEST_DATABASE_URL=postgresql+psycopg://weather:weather@localhost:5432/weather_test uv run pytest`.
 
 ## RED → GREEN
 

@@ -57,7 +57,7 @@ O service não sabe que existe FastAPI, httpx ou SQLAlchemy.
 ### Consulta
 
 1. `GET /api/v1/weather` valida filtros e paginação no adaptador HTTP.
-2. O `WeatherService` chama `WeatherRepository.list(...)`.
+2. O `WeatherService` chama `WeatherRepository.list_readings(...)`.
 3. O adaptador PostgreSQL executa count + select ordenado por `observed_at DESC`.
 4. A rota devolve `items`, `total`, `page` e `page_size`.
 
@@ -75,7 +75,7 @@ O service não sabe que existe FastAPI, httpx ou SQLAlchemy.
 
 `pytest`, `respx`, `ruff`.
 
-> Nenhum pacote foi instalado na etapa de fundação.
+As versões são controladas por `pyproject.toml` e `uv.lock`.
 
 ## Module shapes
 

@@ -1,6 +1,6 @@
 # Getting started
 
-> **Status:** este documento descreve o estado alvo. A implementação ainda não foi iniciada; os comandos passam a funcionar após o próximo plano.
+> A API e o ambiente local são definidos pelo plano `plans/002-weather-api.md`.
 
 ## Pré-requisitos
 
@@ -13,7 +13,7 @@
 1. Copie o arquivo de exemplo:
 
    ```bash
-   cp .env.example .env
+   cp -n .env.example .env
    ```
 
 2. Preencha `OPENWEATHER_API_KEY` no `.env`.
@@ -57,20 +57,18 @@ docker compose run --rm api python scripts/seed.py
 
 ## Testes
 
+Inicie o PostgreSQL e prepare um banco separado para os testes:
+
 ```bash
-docker compose run --rm api pytest
-# ou, com Python 3.12 + uv:
+docker compose up -d db
+docker compose exec -T db createdb -U weather weather_test
 uv sync --frozen
-uv run pytest
+TEST_DATABASE_URL=postgresql+psycopg://weather:weather@localhost:5432/weather_test uv run pytest
 ```
 
 ## Migrations
 
-Automáticas no `docker compose up`. Para rodar manualmente:
-
-```bash
-docker compose run --rm api alembic upgrade head
-```
+Automáticas no `docker compose up --build` antes do Uvicorn iniciar.
 
 ## Notas
 
