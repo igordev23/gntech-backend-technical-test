@@ -17,7 +17,8 @@ Fluxo adaptado para um repositório solo de teste técnico. O objetivo é histó
 
 ## Regras
 
-- Uma branch por plano em `plans/`.
+- Um plano por mudança; plano e implementação em PRs separados.
+- O PR do plano entra em `develop` antes de qualquer código de implementação.
 - Nada de commit direto em `main` ou `develop` depois da fundação.
 - Mudanças de aplicação usam worktree dedicada.
 - PR sempre para `develop`; release PR de `develop` para `main`.
@@ -42,16 +43,28 @@ feat(api): add weather sync endpoint
 test(client): cover openweather error mapping
 ```
 
+## Plano e implementação
+
+1. Crie a branch `docs/<slug>` e abra o PR do plano em `plans/NNN-short-name.md`. Sem código de aplicação.
+2. Merge do plano em `develop`.
+3. Crie a branch `feat/<slug>` ou `fix/<slug>` a partir de `develop` atualizada.
+4. Abra o PR de implementação, referenciando o plano.
+5. Merge em `develop`.
+
+Correção também é PR: `fix/<slug>`, nunca commit direto em `develop` ou `main`.
+
 ## Fluxo de uma feature
+
+Pré-requisito: o PR do plano já foi mergeado em `develop`.
 
 ```bash
 git fetch origin
-git worktree add -b feat/nome-curto ../worktrees/nome-curto origin/develop
-cd ../worktrees/nome-curto
+git worktree add -b feat/short-name ../worktrees/short-name origin/develop
+cd ../worktrees/short-name
 # implementar seguindo o plano
 git add ...
 git commit -m "feat(escopo): ..."
-git push -u origin feat/nome-curto
+git push -u origin feat/short-name
 # abrir PR para develop
 ```
 
@@ -69,6 +82,8 @@ git push -u origin release/1.0.0
 
 ## Estado atual
 
-- `main`: fundação do repositório.
-- `develop`: criada a partir de `main` após a fundação.
-- Nenhuma feature iniciada.
+- `main`: contém a fundação do repositório; a release `1.0.0` ainda não foi mesclada.
+- `develop`: contém a implementação do plano 002, integrada pelo PR #3.
+- `feat/weather-api`: PR de implementação #3 mesclado.
+- `release/1.0.0`: branch de release criada a partir de `develop` com versão bumpada e README atualizado.
+- Release `1.0.0` pronto para revisão e merge para `main`.

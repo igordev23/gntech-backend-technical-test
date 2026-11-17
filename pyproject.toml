@@ -1,0 +1,36 @@
+[project]
+name = "gntech-weather-api"
+version = "1.0.0"
+description = "GnTech weather API technical test"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "alembic>=1.14,<2",
+    "fastapi>=0.115,<1",
+    "httpx>=0.28,<1",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic-settings>=2.7,<3",
+    "sqlalchemy>=2.0,<2.1",
+    "uvicorn[standard]>=0.34,<1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<9",
+    "respx>=0.22,<1",
+    "ruff>=0.9,<1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

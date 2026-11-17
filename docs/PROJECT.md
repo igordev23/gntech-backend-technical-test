@@ -47,4 +47,4 @@ Não há usuários finais, autenticação ou multiusuário nesta versão.
 
 ## Status
 
-Fundação do repositório concluída. Implementação pendente de plano aprovado em `plans/`.
+Fundação do repositório e implementação do plano `plans/002-weather-api.md` concluídas. O PR #3 integrou a API de clima em `develop`. Todos os entregáveis da avaliação técnica descritos neste documento foram implementados e validados; não há plano funcional seguinte pendente.

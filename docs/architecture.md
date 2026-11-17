@@ -1,5 +1,33 @@
 # Arquitetura
 
+## Decisão: Hexagonal (Ports & Adapters)
+
+A aplicação usa **Hexagonal Architecture** em versão enxuta, com duas portas. O objetivo é isolar a regra de negócio de FastAPI, SQLAlchemy e httpx sem criar a cerimônia de uma Clean Architecture completa.
+
+### Por que Hexagonal neste projeto
+
+- O problema tem dois sistemas externos simétricos: OpenWeather (fonte de dados) e PostgreSQL (persistência). Hexagonal trata os dois como adaptadores.
+- O FastAPI é um adaptador de entrada; `Depends` é o composition root natural para montar o serviço com os adaptadores.
+- O núcleo (`domain/` + `application/`) pode ser testado com fakes, sem subir HTTP ou banco.
+- Trocar OpenWeather por outro provedor, ou PostgreSQL por outro banco, não exige mudar a regra de negócio.
+- É proporcional: duas portas, nenhum unit of work, domain event, CQRS ou interface genérica.
+
+### Frase para a entrevista
+
+> “Escolhi Hexagonal porque o FastAPI é um adaptador de entrada e o `Depends` é o composition root natural. O núcleo não depende de FastAPI, SQLAlchemy ou httpx; OpenWeather e PostgreSQL entram atrás de duas portas. Isso deixa a regra de negócio testável com fakes e permite trocar provedor ou banco sem tocar no serviço. Não usei Clean Architecture completa porque o domínio tem uma entidade e quatro endpoints — seria cerimônia sem retorno.”
+
+### Alternativas rejeitadas
+
+> Resumo. O registro canônico, com contexto, consequências e status, é `docs/decisions.md` (D-002).
+
+| Arquitetura | Por que não |
+|---|---|
+| Clean Architecture completa | Entidades + use cases + presenters + boundaries para 1 entidade e 4 endpoints vira cerimônia sem retorno. Hexagonal entrega a mesma inversão com menos conceitos. |
+| Vertical Slice | Boa para muitas features; aqui existe basicamente uma feature (clima). As fronteiras de infraestrutura ficariam menos explícitas. |
+| Camadas tradicionais | Genérica; não explica por que FastAPI está ali nem como trocar OpenWeather/Postgres sem tocar na regra. |
+| MVC | FastAPI não é MVC; não há controller/view no sentido clássico. |
+| DDD tático | O domínio é anêmico (uma leitura de clima). Aggregate/domain events não se pagam. |
+
 ## Stack
 
 - Python 3.12
@@ -16,23 +44,26 @@
 
 ### Sync
 
-1. `POST /api/v1/weather/sync` valida `city`/`country` no schema Pydantic.
-2. O service monta a chamada e o client httpx consulta a OpenWeather com `q`, `appid`, `units=metric` e `lang=pt_br`.
-3. O client aplica timeout, retries limitados e traduz erros HTTP/rede para erros de domínio.
-4. A resposta é validada por um schema Pydantic antes de entrar no domínio.
-5. O repository faz `INSERT ... ON CONFLICT (city_name, country_code, source) DO UPDATE`.
-6. A rota devolve a leitura persistida.
+1. `POST /api/v1/weather/sync` valida `city`/`country` no schema Pydantic (adaptador HTTP).
+2. O `WeatherService` chama `WeatherProvider.fetch_current(city, country)`.
+3. O adaptador OpenWeather resolve a cidade pelo Geocoding API (`/geo/1.0/direct`) e obtém `lat`/`lon`.
+4. Em seguida consulta a Current Weather 2.5 em `/data/2.5/weather` com `lat`, `lon`, `appid`, `units=metric` e `lang=pt_br`, aplica timeout/retries e valida a resposta.
+5. O service recebe um `WeatherReading` e chama `WeatherRepository.upsert(reading)`.
+6. O adaptador PostgreSQL executa `INSERT ... ON CONFLICT (city_name, country_code, source) DO UPDATE`.
+7. A rota devolve o schema Pydantic da leitura persistida.
+
+O service não sabe que existe FastAPI, httpx ou SQLAlchemy.
 
 ### Consulta
 
-1. `GET /api/v1/weather` valida filtros e paginação.
-2. O service monta a query.
-3. O repository executa count + select ordenado por `observed_at DESC`.
+1. `GET /api/v1/weather` valida filtros e paginação no adaptador HTTP.
+2. O `WeatherService` chama `WeatherRepository.list_readings(...)`.
+3. O adaptador PostgreSQL executa count + select ordenado por `observed_at DESC`.
 4. A rota devolve `items`, `total`, `page` e `page_size`.
 
 ### Health
 
-`GET /health` executa `SELECT 1` no banco; retorna 200 ou 503.
+`GET /health` chama um check de banco no adaptador de persistência; retorna 200 ou 503.
 
 ## Packages
 
@@ -44,51 +75,53 @@
 
 `pytest`, `respx`, `ruff`.
 
-> Nenhum pacote foi instalado na etapa de fundação.
+As versões são controladas por `pyproject.toml` e `uv.lock`.
 
 ## Module shapes
 
 ```text
 app/
-├── main.py                 # app factory, routers, exception handlers
-├── core/
-│   ├── config.py           # pydantic-settings
-│   ├── errors.py           # erros de domínio + handlers
-│   └── logging.py          # logging sem segredos
-├── api/
-│   ├── deps.py             # dependências (sessão, service, client)
-│   └── routes/
-│       ├── health.py
-│       └── weather.py
-├── services/
-│   └── weather.py          # regras de sync e consulta
-├── clients/
-│   └── openweather.py      # httpx, timeout, retry, tradução de erros
-├── repositories/
-│   └── weather.py          # queries e upsert
-├── models/
-│   └── weather.py          # tabela weather_readings
-├── schemas/
-│   └── weather.py          # contratos Pydantic
-└── db/
-    ├── base.py             # Base declarativa
-    └── session.py          # engine e session
+├── domain/
+│   ├── models.py          # WeatherReading (dataclass)
+│   ├── ports.py           # WeatherProvider, WeatherRepository (Protocols)
+│   └── errors.py          # CityNotFound, UpstreamError, ...
+├── application/
+│   └── weather_service.py # sync_weather, list_readings, get_reading
+├── adapters/
+│   ├── inbound/
+│   │   └── http/
+│   │       ├── routes/weather.py
+│   │       ├── routes/health.py
+│   │       ├── schemas.py          # Pydantic (contrato HTTP)
+│   │       ├── dependencies.py     # composition root com Depends
+│   │       └── error_handlers.py   # domínio -> HTTP status
+│   └── outbound/
+│       ├── openweather/client.py   # implementa WeatherProvider
+│       └── postgres/
+│           ├── models.py           # ORM
+│           ├── repository.py       # implementa WeatherRepository
+│           └── session.py
+├── config.py
+└── main.py
 alembic/
 └── versions/
 scripts/
-└── seed.py                 # dados de exemplo (sem chamar a API real)
+└── seed.py                         # dados de exemplo (sem chamar a API real)
 tests/
 ├── unit/
 └── integration/
 ```
 
-### Regras de camadas
+### Regra de dependência
 
-- Rotas não acessam o banco diretamente.
-- Services não conhecem HTTP nem SQLAlchemy; orquestram client + repository.
-- Client não conhece banco; repository não conhece HTTP.
-- Schemas Pydantic são o contrato de entrada/saída; modelos ORM não vazam para a API.
-- Erros de infraestrutura são traduzidos para erros de domínio em `core/errors.py`.
+- `domain/` importa apenas a biblioteca padrão e `typing`. Não importa FastAPI, SQLAlchemy, httpx nem Pydantic.
+- `application/` importa `domain/`. Não importa framework nem infraestrutura.
+- `adapters/` importam `domain/` e `application/` e podem importar as bibliotecas de infraestrutura.
+- `main.py` e `dependencies.py` são o composition root: montam os adaptadores e injetam no service.
+- Nenhum adaptador é importado pelo núcleo.
+- Pydantic existe só na borda HTTP (schemas); o domínio usa dataclass.
+- SQLAlchemy existe só em `adapters/outbound/postgres`.
+- httpx existe só em `adapters/outbound/openweather`.
 
 ## Data
 
@@ -140,8 +173,8 @@ O `country_code` vem de `sys.country` da resposta. Se o provedor não retornar, 
 
 ## Idioma
 
-- Documentação e planos: português.
-- Código, testes, identificadores, comentários, docstrings, logs e mensagens de commit: 100% inglês.
+- Conteúdo de documentação e planos: português.
+- Nomes de arquivos e pastas, código, testes, identificadores, comentários, docstrings, logs e mensagens de commit: 100% inglês.
 
 ## Git flow
 

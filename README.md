@@ -6,69 +6,62 @@ O objetivo é demonstrar extração de dados de uma API pública, persistência 
 
 ## Status
 
-**Fundação do repositório.** Nenhum código de aplicação, dependência, container ou migration foi criado ainda. A implementação começa somente depois da aprovação do próximo plano em `plans/`.
+**Release 1.0.0 pronto.** O código foi versionado em `1.0.0` (pyproject.toml) e validado localmente (tests, lint, format, Docker Compose). As mudanças principais incluem:
+
+- API de clima com sync e consulta por cidade/país
+- Adaptadores OpenWeather e PostgreSQL (Hexagonal, 2 portas)
+- Migrações automáticas com Alembic
+- Seed script para testes sem API key
+- Cobertura de testes unitários e de integração
+- Documentação governança (`AGENTS.md`, `docs/decisions.md`)
+
+Variáveis de ambiente necessárias: `.env` com `OPENWEATHER_API_KEY`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`. Nunca commitar segredos.
 
 ## Decisões fechadas
+
+Justificativa de cada escolha, alternativas descartadas e consequências: `docs/decisions.md`.
 
 | Decisão | Escolha |
 |---|---|
 | Linguagem/framework | Python 3.12 + FastAPI |
+| Arquitetura | Hexagonal (Ports & Adapters), 2 portas |
 | Banco | PostgreSQL 16 |
 | Dados | Última leitura por cidade (`upsert`), uma linha por `(city, country, source)` |
 | API externa | OpenWeather (Current Weather) |
 | Execução | Docker Compose local (API + PostgreSQL); sem deploy público |
 | Processo | SDD: plano → contrato → RED → GREEN → REFACTOR |
 | Git | `main` estável, `develop` de integração, `feat/*` por plano |
-| Idioma | Docs/planos em português; código, testes e commits 100% em inglês |
+| Idioma | Conteúdo de docs/planos em português; nomes de arquivos, código, testes e commits 100% em inglês |
 
-## Como navegar
+## API
 
-- `docs/PROJECT.md` — especificação do produto (fonte da verdade).
-- `docs/architecture.md` — stack, camadas, modelo de dados e fluxos.
-- `docs/getting-started.md` — configuração e execução (estado alvo).
-- `docs/testing.md` — estratégia de testes.
-- `docs/sdd.md` — como uma mudança entra.
-- `docs/git-flow.md` — branches, commits e PRs.
-- `plans/` — planos aprovados, um por feature.
-- `IA.md` — regras duras para agentes de IA e humanos.
+- `POST /api/v1/weather/sync` — consulta a OpenWeather e persiste a leitura mais recente.
+- `GET /api/v1/weather` — lista leituras com filtros e paginação.
+- `GET /api/v1/weather/{id}` — consulta uma leitura por UUID.
+- `GET /health` — verifica a conexão com PostgreSQL.
+- Swagger: `/docs`.
 
-## Estrutura atual
+Para configurar e executar localmente, consulte `docs/getting-started.md`.
+
+## Estrutura
 
 ```text
-.
-├── IA.md
-├── README.md
-├── CONTRIBUTING.md
-├── SECURITY.md
-├── .env.example
-├── .repo-model.json
-├── docs/
-│   ├── PROJECT.md
-│   ├── architecture.md
-│   ├── getting-started.md
-│   ├── testing.md
-│   ├── sdd.md
-│   ├── stack-profiles.md
-│   └── git-flow.md
-├── plans/
-│   └── 001-fundacao-do-repo.md
-├── scripts/
-│   ├── verify-repo.sh
-│   └── run-validation.sh
-└── .github/
-    ├── workflows/ci.yml
-    ├── ISSUE_TEMPLATE/bug.yml
-    ├── dependabot.yml
-    └── pull_request_template.md
+app/
+├── domain/ and application/
+└── adapters/
+    ├── inbound/http/
+    └── outbound/{openweather,postgres}/
+alembic/
+scripts/seed.py
+tests/{unit,integration}/
+docs/
+plans/
+Dockerfile
+docker-compose.yml
 ```
 
-## Próximos passos
-
-1. Escrever e aprovar o próximo plano com o contrato da API, o DDL e a sequência RED → GREEN → REFACTOR.
-2. Implementar a fundação técnica (pyproject/uv, Docker Compose, banco, migration, health).
-3. Implementar sync, consulta, seed, testes e documentação de execução.
-4. Ativar o `.repo-model.json` (`template` → `active`) e fechar a release `1.0.0`.
+Documentação de produto: `docs/PROJECT.md`; decisões: `docs/decisions.md`; regras de contribuição: `AGENTS.md`.
 
 ## Regra de escopo
 
-Nada fora do plano aprovado em `plans/` é implementado. Necessidade nova vira plano novo, aprovado antes da execução. Ver `IA.md`.
+Nada fora do plano aprovado em `plans/` é implementado. Necessidade nova vira plano novo, aprovado antes da execução. O plano entra por PR em `develop` e precisa ser mergeado antes do PR de implementação; correção também é PR. Ver `AGENTS.md`.
