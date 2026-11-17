@@ -92,3 +92,35 @@ Nenhum endpoint criado nesta etapa. O contrato alvo está em `docs/PROJECT.md`.
 - [ ] Repositório remoto criado e `main` enviada.
 - [ ] Branch `develop` criada e enviada.
 - [ ] Nenhum pacote instalado, container ou código de aplicação.
+
+## Emenda — 2026-11-17 — AGENTS.md e arquitetura Hexagonal
+
+Esta emenda não apaga a decisão anterior; ela registra a correção.
+
+- `IA.md` foi renomeado para `AGENTS.md`, o padrão lido por agentes de IA. `opencode.json`, `scripts/verify-repo.sh`, `README.md` e `docs/sdd.md` foram atualizados.
+- A arquitetura inicialmente descrita como "camadas pragmáticas" foi substituída por **Hexagonal (Ports & Adapters)** com duas portas: `WeatherProvider` e `WeatherRepository`.
+- Justificativa: FastAPI é um adaptador de entrada e `Depends` é o composition root; OpenWeather e PostgreSQL são adaptadores de saída; o núcleo não importa FastAPI, SQLAlchemy, httpx nem Pydantic.
+- A decisão completa e as alternativas rejeitadas estão em `docs/architecture.md` e em `AGENTS.md`.
+- Nenhum código foi criado nesta emenda.
+
+## Emenda — 2026-11-17 — Registro de decisões e nome do repositório
+
+- Criado `docs/decisoes.md` como registro canônico: contexto, decisão, motivo, alternativas rejeitadas e consequências (D-001 a D-015), mais as decisões em aberto para o plano 002.
+- `AGENTS.md`, `README.md`, `docs/sdd.md`, `CONTRIBUTING.md` e `docs/architecture.md` passaram a apontar para o registro; `scripts/verify-repo.sh` exige o arquivo.
+- Repositório renomeado de `teste-tecnico-gntech` para `gntech-backend-technical-test` (nome em inglês). O GitHub redireciona a URL antiga; a pasta local acompanhou o nome.
+- Nenhum código foi criado nesta emenda.
+
+## Emenda — 2026-11-17 — Nomes de arquivos em inglês
+
+- Arquivos e pastas seguem o padrão inglês; apenas o **conteúdo** dos docs e planos fica em português.
+- `plans/001-fundacao-do-repo.md` → `plans/001-repository-foundation.md`.
+- `docs/decisoes.md` → `docs/decisions.md`.
+- Convenção atualizada em `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `docs/architecture.md` e `docs/decisions.md` (D-014).
+- Referências atualizadas em `docs/sdd.md`, `docs/git-flow.md` e `scripts/verify-repo.sh`. Os nomes antigos nas emendas acima ficam como registro histórico.
+
+## Emenda — 2026-11-17 — Plano mergeado antes da implementação
+
+- Regra dura: nenhuma implementação começa antes do merge do PR do plano em `develop`.
+- Plano e implementação usam PRs separados: `docs/<slug>` para o plano, `feat/<slug>` ou `fix/<slug>` para o código.
+- Toda correção passa por PR próprio, mesmo pequena; nada direto em `develop` ou `main`.
+- Regra registrada em `AGENTS.md`, `CONTRIBUTING.md`, `docs/git-flow.md`, `docs/sdd.md` e `docs/decisions.md` (D-013).
