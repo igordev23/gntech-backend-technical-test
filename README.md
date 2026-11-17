@@ -6,7 +6,7 @@ O objetivo é demonstrar extração de dados de uma API pública, persistência 
 
 ## Status
 
-**Release 1.0.0 pronto.** O código foi versionado em `1.0.0` (pyproject.toml) e validado localmente (tests, lint, format, Docker Compose). As mudanças principais incluem:
+**Release 1.0.0 publicada.** A release foi integrada em `main` pelo PR #5 e sincronizada de volta para `develop` pelo PR #6. As mudanças principais incluem:
 
 - API de clima com sync e consulta por cidade/país
 - Adaptadores OpenWeather e PostgreSQL (Hexagonal, 2 portas)

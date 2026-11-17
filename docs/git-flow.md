@@ -82,8 +82,8 @@ git push -u origin release/1.0.0
 
 ## Estado atual
 
-- `main`: contém a fundação do repositório; a release `1.0.0` ainda não foi mesclada.
-- `develop`: contém a implementação do plano 002, integrada pelo PR #3.
+- `main`: contém a release `1.0.0`, integrada pelo PR #5 e marcada com a tag `v1.0.0`.
+- `develop`: contém a implementação do plano 002 e a sincronização da release, integrada pelo PR #6.
 - `feat/weather-api`: PR de implementação #3 mesclado.
-- `release/1.0.0`: branch de release criada a partir de `develop` com versão bumpada e README atualizado.
-- Release `1.0.0` pronto para revisão e merge para `main`.
+- `release/1.0.0`: PR de release #5 mesclado.
+- Não há release pendente; mudanças futuras seguem o fluxo de plano e PR descrito acima.
