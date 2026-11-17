@@ -8,7 +8,7 @@ Este repositório é neutro de stack. Escolha um perfil como ponto de partida, d
 - `uv sync --frozen` para instalar.
 - `actions/setup-python` com 3.12 e `astral-sh/setup-uv` no CI.
 - PostgreSQL 16 como service no CI para os testes de integração.
-- `validation_command`: `uv sync --frozen && uv run ruff check . && uv run ruff format --check . && uv run pytest && docker build -t teste-tecnico-gntech:ci .`
+- `validation_command`: `uv sync --frozen && uv run ruff check . && uv run ruff format --check . && uv run pytest && docker build -t gntech-backend-technical-test:ci .`
 
 ## Node.js / TypeScript
 

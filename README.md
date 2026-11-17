@@ -10,33 +10,37 @@ O objetivo é demonstrar extração de dados de uma API pública, persistência 
 
 ## Decisões fechadas
 
+Justificativa de cada escolha, alternativas descartadas e consequências: `docs/decisions.md`.
+
 | Decisão | Escolha |
 |---|---|
 | Linguagem/framework | Python 3.12 + FastAPI |
+| Arquitetura | Hexagonal (Ports & Adapters), 2 portas |
 | Banco | PostgreSQL 16 |
 | Dados | Última leitura por cidade (`upsert`), uma linha por `(city, country, source)` |
 | API externa | OpenWeather (Current Weather) |
 | Execução | Docker Compose local (API + PostgreSQL); sem deploy público |
 | Processo | SDD: plano → contrato → RED → GREEN → REFACTOR |
 | Git | `main` estável, `develop` de integração, `feat/*` por plano |
-| Idioma | Docs/planos em português; código, testes e commits 100% em inglês |
+| Idioma | Conteúdo de docs/planos em português; nomes de arquivos, código, testes e commits 100% em inglês |
 
 ## Como navegar
 
 - `docs/PROJECT.md` — especificação do produto (fonte da verdade).
 - `docs/architecture.md` — stack, camadas, modelo de dados e fluxos.
+- `docs/decisions.md` — decisões, justificativas e alternativas descartadas.
 - `docs/getting-started.md` — configuração e execução (estado alvo).
 - `docs/testing.md` — estratégia de testes.
 - `docs/sdd.md` — como uma mudança entra.
 - `docs/git-flow.md` — branches, commits e PRs.
 - `plans/` — planos aprovados, um por feature.
-- `IA.md` — regras duras para agentes de IA e humanos.
+- `AGENTS.md` — regras duras para agentes de IA e humanos.
 
 ## Estrutura atual
 
 ```text
 .
-├── IA.md
+├── AGENTS.md
 ├── README.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
@@ -45,13 +49,14 @@ O objetivo é demonstrar extração de dados de uma API pública, persistência 
 ├── docs/
 │   ├── PROJECT.md
 │   ├── architecture.md
+│   ├── decisions.md
 │   ├── getting-started.md
 │   ├── testing.md
 │   ├── sdd.md
 │   ├── stack-profiles.md
 │   └── git-flow.md
 ├── plans/
-│   └── 001-fundacao-do-repo.md
+│   └── 001-repository-foundation.md
 ├── scripts/
 │   ├── verify-repo.sh
 │   └── run-validation.sh
@@ -71,4 +76,4 @@ O objetivo é demonstrar extração de dados de uma API pública, persistência 
 
 ## Regra de escopo
 
-Nada fora do plano aprovado em `plans/` é implementado. Necessidade nova vira plano novo, aprovado antes da execução. Ver `IA.md`.
+Nada fora do plano aprovado em `plans/` é implementado. Necessidade nova vira plano novo, aprovado antes da execução. O plano entra por PR em `develop` e precisa ser mergeado antes do PR de implementação; correção também é PR. Ver `AGENTS.md`.

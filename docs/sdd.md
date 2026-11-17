@@ -8,17 +8,22 @@ Use este fluxo para features, correções de comportamento, integrações e alte
 
 ## Regra de escopo
 
-Nada fora do plano aprovado em `plans/` é implementado. Uma necessidade nova vira um novo plano, aprovado antes da execução. Ver `IA.md`.
+Nada fora do plano aprovado em `plans/` é implementado. Uma necessidade nova vira um novo plano, aprovado antes da execução. Ver `AGENTS.md`.
 
 ## Sequência obrigatória
 
-1. Crie ou atualize `plans/NNN-nome-curto.md` a partir do modelo abaixo.
-2. Registre origem, contrato alvo, decisões já fechadas e compatibilidade esperada.
-3. Para mudanças de aplicação, abra uma worktree dedicada antes de alterar código.
-4. Escreva e execute a spec RED. A falha precisa demonstrar a ausência do comportamento, não erro de setup ou importação.
-5. Faça a menor implementação GREEN e execute a spec focada.
-6. Refatore apenas com a suite verde.
-7. Execute a validação ampla do repositório e registre os comandos/resultados no plano e na PR.
+1. Crie ou atualize `plans/NNN-short-name.md` a partir do modelo abaixo.
+2. Registre origem, contrato alvo, decisões já fechadas e compatibilidade esperada. Decisão que afeta contrato, arquitetura, dados ou dependência entra em `docs/decisions.md`, com o motivo e as alternativas rejeitadas.
+3. Abra o PR do plano e faça merge em `develop` quando aprovado. Nenhum código de implementação antes desse merge.
+4. Para mudanças de aplicação, abra uma worktree dedicada a partir de `develop` atualizada, antes da spec RED.
+5. Escreva e execute a spec RED. A falha precisa demonstrar a ausência do comportamento, não erro de setup ou importação.
+6. Faça a menor implementação GREEN e execute a spec focada.
+7. Refatore apenas com a suite verde.
+8. Execute a validação ampla do repositório e registre os comandos/resultados no plano e na PR de implementação.
+
+## Registro de decisões
+
+Toda decisão relevante vive em `docs/decisions.md`, com contexto, escolha, motivo, alternativas rejeitadas e consequências. O plano em `plans/` aponta para o ID da decisão em vez de repetir a justificativa. Decisão errada é emendada, não apagada — o histórico do raciocínio faz parte do registro.
 
 ## Worktree
 
@@ -26,8 +31,8 @@ Para mudanças de aplicação, parta de `develop` em uma worktree dedicada:
 
 ```bash
 git fetch origin
-git worktree add -b feat/nome-curto ../worktrees/nome-curto origin/develop
-cd ../worktrees/nome-curto
+git worktree add -b feat/short-name ../worktrees/short-name origin/develop
+cd ../worktrees/short-name
 git status --short
 ```
 
