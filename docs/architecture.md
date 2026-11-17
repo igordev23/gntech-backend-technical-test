@@ -46,10 +46,11 @@ A aplicação usa **Hexagonal Architecture** em versão enxuta, com duas portas.
 
 1. `POST /api/v1/weather/sync` valida `city`/`country` no schema Pydantic (adaptador HTTP).
 2. O `WeatherService` chama `WeatherProvider.fetch_current(city, country)`.
-3. O adaptador OpenWeather consulta a API com `q`, `appid`, `units=metric` e `lang=pt_br`, aplica timeout/retries e valida a resposta.
-4. O service recebe um `WeatherReading` e chama `WeatherRepository.upsert(reading)`.
-5. O adaptador PostgreSQL executa `INSERT ... ON CONFLICT (city_name, country_code, source) DO UPDATE`.
-6. A rota devolve o schema Pydantic da leitura persistida.
+3. O adaptador OpenWeather resolve a cidade pelo Geocoding API (`/geo/1.0/direct`) e obtém `lat`/`lon`.
+4. Em seguida consulta a Current Weather 2.5 em `/data/2.5/weather` com `lat`, `lon`, `appid`, `units=metric` e `lang=pt_br`, aplica timeout/retries e valida a resposta.
+5. O service recebe um `WeatherReading` e chama `WeatherRepository.upsert(reading)`.
+6. O adaptador PostgreSQL executa `INSERT ... ON CONFLICT (city_name, country_code, source) DO UPDATE`.
+7. A rota devolve o schema Pydantic da leitura persistida.
 
 O service não sabe que existe FastAPI, httpx ou SQLAlchemy.
 

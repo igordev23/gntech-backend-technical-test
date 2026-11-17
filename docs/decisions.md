@@ -34,6 +34,8 @@ Este arquivo registra as decisões relevantes do projeto e, principalmente, **po
 | D-018 | Paginação por `page` e `page_size`, com limite de 100 | aceita |
 | D-019 | Timeout e retry limitados do client OpenWeather | aceita |
 | D-020 | Gravação de `raw_payload` em JSONB | aceita |
+| D-021 | Geocoding direto antes da Current Weather 2.5 | aceita |
+| D-022 | `raw_payload` interno, excluído das respostas HTTP | aceita |
 
 ---
 
@@ -594,7 +596,7 @@ Este arquivo registra as decisões relevantes do projeto e, principalmente, **po
 
 **Contexto.** O client precisa limitar latência e tolerar falhas transitórias sem insistir em erros definitivos.
 
-**Decisão.** Timeout de 5 segundos, até 2 tentativas adicionais e backoff limitado. Retentar 429 e 5xx; não retentar 401 ou 404.
+**Decisão.** Timeout de 5 segundos e até 2 tentativas adicionais por chamada HTTP. Retentar timeout, 429 e 5xx, com espera fixa de 0,5 segundo antes da primeira repetição e 1 segundo antes da segunda. Não retentar 401, 404 ou outros 4xx.
 
 **Por quê.**
 
@@ -614,6 +616,64 @@ Este arquivo registra as decisões relevantes do projeto e, principalmente, **po
 
 - 429 pode ser devolvido ao chamador como `provider_rate_limited`.
 - Timeout, 5xx e payload inválido têm erros de domínio distintos.
+
+---
+
+## D-021 — Geocoding direto antes da Current Weather 2.5
+
+**Detalhes:** `plans/002-weather-api.md`, `docs/architecture.md` · **Status:** aceita
+
+**Contexto.** O endpoint oficial `/data/2.5/weather` usa `lat` e `lon`; o built-in geocoder por `q` está deprecado.
+
+**Decisão.** O sync resolve `city` e `country` pelo Geocoding API `/geo/1.0/direct?q={city}[,{country}]&limit=5&appid={key}` e seleciona o primeiro resultado compatível com o país informado (ou o primeiro resultado quando omitido). Usa o `lat`/`lon` selecionado no endpoint `/data/2.5/weather`.
+
+**Por quê.**
+
+- Alinha o cliente às rotas oficiais documentadas pela OpenWeather.
+- Evita depender do built-in geocoder deprecado da Current Weather.
+- Permite obter `country` de forma consistente no resultado do geocoding.
+
+**Alternativas rejeitadas.**
+
+| Alternativa | Por que não |
+|---|---|
+| Built-in `q` em `/data/2.5/weather` | A própria documentação declara esse geocoder como deprecado. |
+| One Call 4.0 | Exige assinatura separada e muda o formato da resposta. |
+| Coordenadas fixas no código | Não atende a entrada dinâmica de cidade. |
+
+**Consequências.**
+
+- No fluxo sem retry, um sync faz duas chamadas sequenciais: geocoding e clima atual; cada chamada segue os retries de D-019.
+- Um resultado vazio ou que não corresponda ao país informado encerra o sync antes da chamada de clima.
+- Testes devem cobrir resposta vazia do geocoding como cidade não encontrada.
+
+---
+
+## D-022 — `raw_payload` interno, excluído das respostas HTTP
+
+**Detalhes:** `plans/002-weather-api.md` · **Status:** aceita
+
+**Contexto.** A resposta bruta da OpenWeather é persistida para auditoria (D-020), mas pode conter campos desnecessários ao contrato público.
+
+**Decisão.** `raw_payload` existe somente no domínio/persistência e não é incluído em nenhum schema ou resposta HTTP.
+
+**Por quê.**
+
+- Mantém a API pública focada nos campos tipados e estáveis.
+- Evita acoplamento dos consumidores ao formato externo da OpenWeather.
+- Reduz exposição de dados externos sem remover o registro interno para diagnóstico.
+
+**Alternativas rejeitadas.**
+
+| Alternativa | Por que não |
+|---|---|
+| Expor o JSON bruto junto da leitura | Duplica campos tipados e acopla o contrato público ao provedor. |
+| Expor apenas em uma rota de detalhe | Criaria superfície e comportamento não exigidos pelo produto. |
+
+**Consequências.**
+
+- Testes de contrato verificam que `raw_payload` não aparece nas respostas.
+- O payload completo não é registrado em logs.
 
 ---
 
