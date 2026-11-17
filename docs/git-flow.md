@@ -82,6 +82,8 @@ git push -u origin release/1.0.0
 
 ## Estado atual
 
-- `main`: fundação do repositório.
-- `develop`: criada a partir de `main` após a fundação.
-- Nenhuma feature iniciada.
+- `main`: contém a fundação do repositório; a implementação da API ainda não foi promovida por release.
+- `develop`: contém a implementação do plano 002, integrada pelo PR #3.
+- `feat/weather-api`: PR de implementação #3 mesclado.
+- Escopo da avaliação técnica concluído; não há plano funcional seguinte pendente.
+- Próximo passo de entrega: preparar a release `1.0.0` conforme a seção Release acima.
