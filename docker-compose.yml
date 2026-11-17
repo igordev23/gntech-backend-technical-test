@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-weather}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-weather}
+      POSTGRES_DB: ${POSTGRES_DB:-weather}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-weather} -d ${POSTGRES_DB:-weather}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  api:
+    build: .
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-weather}:${POSTGRES_PASSWORD:-weather}@db:5432/${POSTGRES_DB:-weather}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+      OPENWEATHER_GEOCODING_BASE_URL: ${OPENWEATHER_GEOCODING_BASE_URL:-https://api.openweathermap.org/geo/1.0}
+      OPENWEATHER_BASE_URL: ${OPENWEATHER_BASE_URL:-https://api.openweathermap.org/data/2.5}
+      OPENWEATHER_TIMEOUT_SECONDS: ${OPENWEATHER_TIMEOUT_SECONDS:-5}
+      OPENWEATHER_MAX_RETRIES: ${OPENWEATHER_MAX_RETRIES:-2}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  postgres_data:
