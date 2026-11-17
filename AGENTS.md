@@ -23,13 +23,12 @@
 - Decisões de arquitetura, contrato, dados e dependências ficam em `docs/decisions.md`, com o motivo e as alternativas rejeitadas. Antes de propor mudança, leia o registro.
 - Este é um teste técnico, não um produto em produção.
 
-## Stack (alvo)
+## Stack
 
 - Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.0 (sync), Alembic, PostgreSQL 16, httpx, uv.
 - Testes: pytest + respx. Lint/format: Ruff.
 - Docker + Docker Compose para execução local (API + PostgreSQL).
-
-> A stack acima está documentada, mas **ainda não implementada**. Nenhum pacote foi instalado nesta etapa.
+- Implementação conforme `plans/002-weather-api.md`; versões e dependências estão em `pyproject.toml` e `uv.lock`.
 
 ## Arquitetura — Hexagonal (Ports & Adapters)
 
@@ -72,13 +71,13 @@ app/
 └── main.py
 ```
 
-## Comandos (alvo, após implementação)
+## Comandos
 
 - Instalar: `uv sync --frozen`
 - Rodar: `docker compose up --build`
-- Testes: `uv run pytest` ou `docker compose run --rm api pytest`
+- Testes: configure PostgreSQL 16 em `TEST_DATABASE_URL` e execute `uv run pytest` no ambiente de desenvolvimento.
 - Lint/format: `uv run ruff check .` e `uv run ruff format --check .`
-- Migrations: `uv run alembic upgrade head`
+- Migrations: aplicadas automaticamente ao iniciar o serviço `api` no Docker Compose; para execução local, exporte `DATABASE_URL` e execute `uv run alembic -x database_url="$DATABASE_URL" upgrade head`.
 
 ## Hard rules — não quebre
 
