@@ -1,0 +1,29 @@
+name: Bug report
+description: Registre um comportamento que diverge do esperado.
+title: "bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto
+      description: Qual fluxo, ambiente e impacto? Não inclua dados pessoais ou segredos.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reprodução
+      description: Passos mínimos para reproduzir.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Esperado e atual
+    validations:
+      required: true

@@ -1,0 +1,33 @@
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Dados locais
+pgdata/
+
+# Logs
+*.log
+
+# IDEs e sistema
+.idea/
+.vscode/
+.DS_Store
+
+# Nunca ignorar lockfiles sem uma razão clara.

@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      active: ${{ steps.verify.outputs.active }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: verify
+        run: bash scripts/verify-repo.sh
+
+  validation:
+    needs: bootstrap
+    if: needs.bootstrap.outputs.active == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      group: ci-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/run-validation.sh

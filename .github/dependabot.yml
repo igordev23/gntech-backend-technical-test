@@ -1,0 +1,4 @@
+# Ative dependabot somente para o ecossistema usado pelo projeto.
+# Exemplos: npm, pip, bundler, gomod, cargo, docker ou github-actions.
+version: 2
+updates: []
