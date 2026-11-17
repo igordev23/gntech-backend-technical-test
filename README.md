@@ -6,7 +6,16 @@ O objetivo é demonstrar extração de dados de uma API pública, persistência 
 
 ## Status
 
-**Plano 002 implementado e integrado em `develop` pelo PR #3.** A API de clima, os adaptadores OpenWeather/PostgreSQL, as migrations, os testes e a execução local via Docker Compose estão disponíveis conforme `plans/002-weather-api.md`.
+**Release 1.0.0 pronto.** O código foi versionado em `1.0.0` (pyproject.toml) e validado localmente (tests, lint, format, Docker Compose). As mudanças principais incluem:
+
+- API de clima com sync e consulta por cidade/país
+- Adaptadores OpenWeather e PostgreSQL (Hexagonal, 2 portas)
+- Migrações automáticas com Alembic
+- Seed script para testes sem API key
+- Cobertura de testes unitários e de integração
+- Documentação governança (`AGENTS.md`, `docs/decisions.md`)
+
+Variáveis de ambiente necessárias: `.env` com `OPENWEATHER_API_KEY`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`. Nunca commitar segredos.
 
 ## Decisões fechadas
 
